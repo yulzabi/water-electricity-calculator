@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מחשבון חלוקת חשבונות מים וחשמל</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>💡💧 מחשבון חשבונות</h1>
+            <p class="subtitle">חלוקת חשבונות מים וחשמל - יחידות דיור</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="calculator">
+                <span class="tab-icon">🧮</span>
+                <span>מחשבון</span>
+            </button>
+            <button class="tab-btn" data-tab="history">
+                <span class="tab-icon">📋</span>
+                <span>היסטוריה</span>
+            </button>
+        </nav>
+
+        <!-- Setup Screen (first time / settings) -->
+        <section id="setupScreen" class="setup-screen" style="display:none;">
+            <div class="card setup-card">
+                <div class="setup-icon">⚙️</div>
+                <h2 class="card-title setup-title">הגדרת קריאות אחרונות</h2>
+                <p class="setup-description">הזן את הקריאות האחרונות של המונים כדי שהמערכת תזכור אותן לפעם הבאה</p>
+                
+                <div class="setup-section">
+                    <h3 class="setup-section-title">💡 חשמל</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="setupElecMain">קריאה אחרונה - מונה ראשי</label>
+                            <input type="number" id="setupElecMain" placeholder="למשל: 45230" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="setupElecSub">קריאה אחרונה - מונה משני</label>
+                            <input type="number" id="setupElecSub" placeholder="למשל: 12450" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-section">
+                    <h3 class="setup-section-title">💧 מים</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="setupWaterMain">קריאה אחרונה - מונה ראשי</label>
+                            <input type="number" id="setupWaterMain" placeholder="למשל: 1520" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="setupWaterSub">קריאה אחרונה - מונה משני</label>
+                            <input type="number" id="setupWaterSub" placeholder="למשל: 340" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="calculate-btn" id="setupSaveBtn">💾 שמור והמשך</button>
+                <button class="setup-skip-btn" id="setupSkipBtn">דלג לעכשיו</button>
+            </div>
+        </section>
+
+        <!-- Calculator Tab -->
+        <main id="calculator-tab" class="tab-content active">
+            <!-- Bill Type Selection -->
+            <section class="card">
+                <h2 class="card-title">סוג חשבון</h2>
+                <div class="bill-type-selector">
+                    <button class="bill-type-btn active" data-type="electricity">
+                        <span class="bill-icon">💡</span>
+                        <span>חשמל</span>
+                    </button>
+                    <button class="bill-type-btn" data-type="water">
+                        <span class="bill-icon">💧</span>
+                        <span>מים</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Main Bill Info -->
+            <section class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">פרטי החשבונית הראשית</h2>
+                    <button class="settings-btn" id="openSetup" title="הגדרות קריאות">⚙️</button>
+                </div>
+                <div class="form-group">
+                    <label for="totalBill">סכום כולל לתשלום (₪)</label>
+                    <input type="number" id="totalBill" placeholder="הזן סכום" step="0.01" min="0">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="mainMeterPrev">קריאה קודמת - מונה ראשי</label>
+                        <input type="number" id="mainMeterPrev" placeholder="קריאה קודמת" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="mainMeterCurr">קריאה נוכחית - מונה ראשי</label>
+                        <input type="number" id="mainMeterCurr" placeholder="קריאה נוכחית" min="0">
+                    </div>
+                </div>
+                <div class="consumption-display" id="mainConsumption" style="display:none;">
+                    <span class="consumption-label">צריכה כוללת (מונה ראשי):</span>
+                    <span class="consumption-value" id="mainConsumptionValue">-</span>
+                </div>
+            </section>
+
+            <!-- Secondary Meter (Unit 2) -->
+            <section class="card">
+                <h2 class="card-title">מונה משני - יחידה 2</h2>
+                
+                <!-- OCR Upload -->
+                <div class="ocr-section">
+                    <label class="upload-btn" for="meterImage">
+                        <span>📷</span> העלה תמונת מונה
+                    </label>
+                    <input type="file" id="meterImage" accept="image/*" capture="environment" style="display:none;">
+                    <div id="ocrStatus" class="ocr-status" style="display:none;"></div>
+                    <div id="imagePreview" class="image-preview" style="display:none;">
+                        <img id="previewImg" alt="תמונת מונה">
+                        <button class="remove-image-btn" id="removeImage">✕</button>
+                    </div>
+                </div>
+
+                <div class="divider-text">או הזן ידנית</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subMeterPrev">קריאה קודמת - מונה משני</label>
+                        <input type="number" id="subMeterPrev" placeholder="קריאה קודמת" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="subMeterCurr">קריאה נוכחית - מונה משני</label>
+                        <input type="number" id="subMeterCurr" placeholder="קריאה נוכחית" min="0">
+                    </div>
+                </div>
+                <div class="consumption-display" id="subConsumption" style="display:none;">
+                    <span class="consumption-label">צריכה יחידה 2 (מונה משני):</span>
+                    <span class="consumption-value" id="subConsumptionValue">-</span>
+                </div>
+            </section>
+
+            <!-- Calculate Button -->
+            <button class="calculate-btn" id="calculateBtn">
+                חשב חלוקה
+            </button>
+
+            <!-- Results -->
+            <section class="card results-card" id="resultsSection" style="display:none;">
+                <h2 class="card-title">📊 תוצאות</h2>
+                
+                <div class="result-summary">
+                    <div class="result-item unit1">
+                        <div class="result-label">🏠 יחידה 1</div>
+                        <div class="result-amount" id="unit1Amount">₪0</div>
+                        <div class="result-percent" id="unit1Percent">0%</div>
+                    </div>
+                    <div class="result-divider"></div>
+                    <div class="result-item unit2">
+                        <div class="result-label">🏠 יחידה 2</div>
+                        <div class="result-amount" id="unit2Amount">₪0</div>
+                        <div class="result-percent" id="unit2Percent">0%</div>
+                    </div>
+                </div>
+
+                <div class="result-details">
+                    <div class="detail-row">
+                        <span>סה"כ חשבונית:</span>
+                        <span id="detailTotal">₪0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>צריכה כוללת:</span>
+                        <span id="detailTotalConsumption">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>צריכה יחידה 2:</span>
+                        <span id="detailUnit2Consumption">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>צריכה יחידה 1 (הפרש):</span>
+                        <span id="detailUnit1Consumption">0</span>
+                    </div>
+                    <div class="detail-row highlight">
+                        <span>תעריף בפועל ליחידה:</span>
+                        <span id="detailActualRate">₪0</span>
+                    </div>
+                    <div class="detail-row" id="rateCheckRow">
+                        <span>תעריף רשמי להשוואה:</span>
+                        <span id="detailOfficialRate">-</span>
+                    </div>
+                    <div class="rate-status" id="rateStatus" style="display:none;"></div>
+                </div>
+
+                <div class="result-actions">
+                    <button class="action-btn save-btn" id="saveResult">💾 שמור להיסטוריה</button>
+                    <button class="action-btn share-btn" id="shareWhatsapp">📱 שלח בוואטסאפ</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- History Tab -->
+        <main id="history-tab" class="tab-content">
+            <section class="card">
+                <div class="history-header">
+                    <h2 class="card-title">היסטוריית חישובים</h2>
+                    <button class="clear-history-btn" id="clearHistory">🗑️ נקה הכל</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <div class="empty-history">
+                        <span>📭</span>
+                        <p>אין חישובים שמורים</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/rates.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/ocr.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
