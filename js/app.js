@@ -32,12 +32,10 @@
         // Bill type
         billTypeBtns: document.querySelectorAll('.bill-type-btn'),
 
-        // Main meter
+        // Bill info
         totalBill: document.getElementById('totalBill'),
-        mainMeterPrev: document.getElementById('mainMeterPrev'),
-        mainMeterCurr: document.getElementById('mainMeterCurr'),
-        mainConsumption: document.getElementById('mainConsumption'),
-        mainConsumptionValue: document.getElementById('mainConsumptionValue'),
+        totalConsumption: document.getElementById('totalConsumption'),
+        totalConsumptionLabel: document.getElementById('totalConsumptionLabel'),
 
         // Sub meter
         subMeterPrev: document.getElementById('subMeterPrev'),
@@ -102,7 +100,6 @@
         if (!savedReadings) {
             showSetupScreen();
         } else {
-            // Auto-fill previous readings based on current bill type
             applyLastReadings(savedReadings);
         }
 
@@ -110,11 +107,9 @@
         elements.setupSaveBtn.addEventListener('click', () => {
             const readings = {
                 electricity: {
-                    main: parseFloat(elements.setupElecMain.value) || 0,
                     sub: parseFloat(elements.setupElecSub.value) || 0
                 },
                 water: {
-                    main: parseFloat(elements.setupWaterMain.value) || 0,
                     sub: parseFloat(elements.setupWaterSub.value) || 0
                 }
             };
@@ -133,9 +128,7 @@
         elements.openSetup.addEventListener('click', () => {
             const saved = getLastReadings();
             if (saved) {
-                elements.setupElecMain.value = saved.electricity?.main || '';
                 elements.setupElecSub.value = saved.electricity?.sub || '';
-                elements.setupWaterMain.value = saved.water?.main || '';
                 elements.setupWaterSub.value = saved.water?.sub || '';
             }
             showSetupScreen();
@@ -157,10 +150,6 @@
 
         const typeReadings = readings[currentBillType];
         if (typeReadings) {
-            if (typeReadings.main) {
-                elements.mainMeterPrev.value = typeReadings.main;
-                elements.mainMeterPrev.dispatchEvent(new Event('input'));
-            }
             if (typeReadings.sub) {
                 elements.subMeterPrev.value = typeReadings.sub;
                 elements.subMeterPrev.dispatchEvent(new Event('input'));
@@ -168,11 +157,10 @@
         }
     }
 
-    // After successful calculation, auto-save current readings as "last readings" for next time
+    // After successful calculation, auto-save current readings for next time
     function updateLastReadingsAfterCalc(result) {
         const readings = getLastReadings() || { electricity: {}, water: {} };
         readings[result.billType] = {
-            main: result.meters.main.curr,
             sub: result.meters.sub.curr
         };
         saveLastReadings(readings);
@@ -184,15 +172,12 @@
             btn.addEventListener('click', () => {
                 const tab = btn.dataset.tab;
 
-                // Update button states
                 elements.tabBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
-                // Show/hide tabs
                 elements.calculatorTab.classList.toggle('active', tab === 'calculator');
                 elements.historyTab.classList.toggle('active', tab === 'history');
 
-                // Refresh history when switching to history tab
                 if (tab === 'history') {
                     renderHistory();
                 }
@@ -208,9 +193,9 @@
                 btn.classList.add('active');
                 currentBillType = btn.dataset.type;
 
-                // Update unit labels
+                // Update consumption label
                 const unit = RATES[currentBillType].unit;
-                elements.mainConsumptionValue.textContent = '-';
+                elements.totalConsumptionLabel.textContent = `צריכה כוללת מהחשבונית (${unit})`;
                 elements.subConsumptionValue.textContent = '-';
 
                 // Hide results when changing type
@@ -219,11 +204,9 @@
 
                 // Clear fields and apply saved readings for new type
                 elements.totalBill.value = '';
-                elements.mainMeterPrev.value = '';
-                elements.mainMeterCurr.value = '';
+                elements.totalConsumption.value = '';
                 elements.subMeterPrev.value = '';
                 elements.subMeterCurr.value = '';
-                elements.mainConsumption.style.display = 'none';
                 elements.subConsumption.style.display = 'none';
 
                 const savedReadings = getLastReadings();
@@ -236,24 +219,7 @@
 
     // === Live Consumption Display ===
     function initLiveConsumption() {
-        const mainInputs = [elements.mainMeterPrev, elements.mainMeterCurr];
         const subInputs = [elements.subMeterPrev, elements.subMeterCurr];
-
-        mainInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                const prev = parseFloat(elements.mainMeterPrev.value);
-                const curr = parseFloat(elements.mainMeterCurr.value);
-
-                if (!isNaN(prev) && !isNaN(curr) && curr > prev) {
-                    const consumption = curr - prev;
-                    const unit = RATES[currentBillType].unit;
-                    elements.mainConsumptionValue.textContent = `${consumption} ${unit}`;
-                    elements.mainConsumption.style.display = 'flex';
-                } else {
-                    elements.mainConsumption.style.display = 'none';
-                }
-            });
-        });
 
         subInputs.forEach(input => {
             input.addEventListener('input', () => {
@@ -278,12 +244,10 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Show preview
             const previewUrl = OCR.createPreviewUrl(file);
             elements.previewImg.src = previewUrl;
             elements.imagePreview.style.display = 'block';
 
-            // Show loading status
             elements.ocrStatus.style.display = 'block';
             elements.ocrStatus.className = 'ocr-status loading';
             elements.ocrStatus.innerHTML = '<span class="spinner"></span> מזהה מספרים מהתמונה...';
@@ -295,7 +259,6 @@
 
                 if (result.found && result.bestMatch !== null) {
                     elements.subMeterCurr.value = result.bestMatch;
-                    // Trigger input event for live consumption
                     elements.subMeterCurr.dispatchEvent(new Event('input'));
 
                     elements.ocrStatus.className = 'ocr-status success';
@@ -330,8 +293,7 @@
             const params = {
                 billType: currentBillType,
                 totalBill: parseFloat(elements.totalBill.value),
-                mainMeterPrev: parseFloat(elements.mainMeterPrev.value),
-                mainMeterCurr: parseFloat(elements.mainMeterCurr.value),
+                totalConsumption: parseFloat(elements.totalConsumption.value),
                 subMeterPrev: parseFloat(elements.subMeterPrev.value),
                 subMeterCurr: parseFloat(elements.subMeterCurr.value)
             };
@@ -355,30 +317,25 @@
     function displayResults(result) {
         elements.resultsSection.style.display = 'block';
 
-        // Scroll to results
         setTimeout(() => {
             elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
 
-        // Unit amounts
         elements.unit1Amount.textContent = Calculator.formatCurrency(result.unit1.amount);
         elements.unit1Percent.textContent = Calculator.formatPercent(result.unit1.percent);
         elements.unit2Amount.textContent = Calculator.formatCurrency(result.unit2.amount);
         elements.unit2Percent.textContent = Calculator.formatPercent(result.unit2.percent);
 
-        // Details
         elements.detailTotal.textContent = Calculator.formatCurrency(result.totalBill);
         elements.detailTotalConsumption.textContent = `${result.totalConsumption} ${result.unitLabel}`;
         elements.detailUnit2Consumption.textContent = `${result.unit2.consumption} ${result.unitLabel}`;
         elements.detailUnit1Consumption.textContent = `${result.unit1.consumption} ${result.unitLabel}`;
         elements.detailActualRate.textContent = `${Calculator.formatCurrency(result.actualRatePerUnit)}/${result.unitLabel}`;
 
-        // Official rate
         if (result.officialRate) {
             elements.detailOfficialRate.textContent = result.officialRate.description;
         }
 
-        // Rate fairness check
         if (result.rateCheck) {
             elements.rateStatus.style.display = 'block';
             elements.rateStatus.className = `rate-status ${result.rateCheck.status}`;
@@ -479,7 +436,6 @@
 
     // === Toast Notification ===
     function showToast(message, type = 'info') {
-        // Remove existing toast
         const existing = document.querySelector('.toast');
         if (existing) existing.remove();
 
@@ -488,19 +444,17 @@
         toast.textContent = message;
         document.body.appendChild(toast);
 
-        // Trigger animation
         requestAnimationFrame(() => {
             toast.classList.add('show');
         });
 
-        // Auto-hide
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
 
-    // === Public API (for inline event handlers) ===
+    // === Public API ===
     window.App = {
         deleteHistoryItem(id) {
             Storage.delete(id);
@@ -521,7 +475,6 @@
         initHistory();
     }
 
-    // Run when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

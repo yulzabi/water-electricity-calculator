@@ -33,34 +33,24 @@
             <div class="card setup-card">
                 <div class="setup-icon">⚙️</div>
                 <h2 class="card-title setup-title">הגדרת קריאות אחרונות</h2>
-                <p class="setup-description">הזן את הקריאות האחרונות של המונים כדי שהמערכת תזכור אותן לפעם הבאה</p>
+                <p class="setup-description">הזן את הקריאות האחרונות של המונים המשניים (יחידה 2) כדי שהמערכת תזכור אותן לפעם הבאה</p>
                 
                 <div class="setup-section">
-                    <h3 class="setup-section-title">💡 חשמל</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="setupElecMain">קריאה אחרונה - מונה ראשי</label>
-                            <input type="number" id="setupElecMain" placeholder="למשל: 45230" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="setupElecSub">קריאה אחרונה - מונה משני</label>
-                            <input type="number" id="setupElecSub" placeholder="למשל: 12450" min="0">
-                        </div>
+                    <h3 class="setup-section-title">💡 חשמל - מונה משני (יחידה 2)</h3>
+                    <div class="form-group">
+                        <label for="setupElecSub">קריאה אחרונה של מונה משני</label>
+                        <input type="number" id="setupElecSub" placeholder="למשל: 12450" min="0">
                     </div>
+                    <input type="hidden" id="setupElecMain" value="0">
                 </div>
 
                 <div class="setup-section">
-                    <h3 class="setup-section-title">💧 מים</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="setupWaterMain">קריאה אחרונה - מונה ראשי</label>
-                            <input type="number" id="setupWaterMain" placeholder="למשל: 1520" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="setupWaterSub">קריאה אחרונה - מונה משני</label>
-                            <input type="number" id="setupWaterSub" placeholder="למשל: 340" min="0">
-                        </div>
+                    <h3 class="setup-section-title">💧 מים - מונה משני (יחידה 2)</h3>
+                    <div class="form-group">
+                        <label for="setupWaterSub">קריאה אחרונה של מונה משני</label>
+                        <input type="number" id="setupWaterSub" placeholder="למשל: 340" min="0">
                     </div>
+                    <input type="hidden" id="setupWaterMain" value="0">
                 </div>
 
                 <button class="calculate-btn" id="setupSaveBtn">💾 שמור והמשך</button>
@@ -88,26 +78,16 @@
             <!-- Main Bill Info -->
             <section class="card">
                 <div class="card-title-row">
-                    <h2 class="card-title">פרטי החשבונית הראשית</h2>
+                    <h2 class="card-title">פרטי החשבונית</h2>
                     <button class="settings-btn" id="openSetup" title="הגדרות קריאות">⚙️</button>
                 </div>
                 <div class="form-group">
                     <label for="totalBill">סכום כולל לתשלום (₪)</label>
-                    <input type="number" id="totalBill" placeholder="הזן סכום" step="0.01" min="0">
+                    <input type="number" id="totalBill" placeholder="הזן סכום מהחשבונית" step="0.01" min="0">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="mainMeterPrev">קריאה קודמת - מונה ראשי</label>
-                        <input type="number" id="mainMeterPrev" placeholder="קריאה קודמת" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="mainMeterCurr">קריאה נוכחית - מונה ראשי</label>
-                        <input type="number" id="mainMeterCurr" placeholder="קריאה נוכחית" min="0">
-                    </div>
-                </div>
-                <div class="consumption-display" id="mainConsumption" style="display:none;">
-                    <span class="consumption-label">צריכה כוללת (מונה ראשי):</span>
-                    <span class="consumption-value" id="mainConsumptionValue">-</span>
+                <div class="form-group">
+                    <label for="totalConsumption" id="totalConsumptionLabel">צריכה כוללת מהחשבונית (קוט"ש)</label>
+                    <input type="number" id="totalConsumption" placeholder="הזן צריכה כוללת מהחשבונית" step="0.01" min="0">
                 </div>
             </section>
 

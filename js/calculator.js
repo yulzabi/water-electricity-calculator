@@ -1,10 +1,10 @@
 /**
  * Calculator module for splitting utility bills between 2 housing units
  * 
- * Logic:
- * - Main meter: total consumption for both units
- * - Sub meter: consumption for unit 2 only
- * - Unit 1 consumption = Main meter consumption - Sub meter consumption
+ * Simplified Logic:
+ * - Total consumption comes directly from the bill
+ * - Sub meter: consumption for unit 2 only (current - previous reading)
+ * - Unit 1 consumption = Total consumption - Unit 2 consumption
  * - Each unit pays proportionally based on their consumption percentage
  */
 
@@ -14,14 +14,13 @@ const Calculator = {
      * @param {Object} params
      * @param {string} params.billType - 'electricity' or 'water'
      * @param {number} params.totalBill - Total bill amount in ₪
-     * @param {number} params.mainMeterPrev - Main meter previous reading
-     * @param {number} params.mainMeterCurr - Main meter current reading
+     * @param {number} params.totalConsumption - Total consumption from the bill
      * @param {number} params.subMeterPrev - Sub meter (unit 2) previous reading
      * @param {number} params.subMeterCurr - Sub meter (unit 2) current reading
      * @returns {Object} Calculation results
      */
     calculate(params) {
-        const { billType, totalBill, mainMeterPrev, mainMeterCurr, subMeterPrev, subMeterCurr } = params;
+        const { billType, totalBill, totalConsumption, subMeterPrev, subMeterCurr } = params;
 
         // Validate inputs
         const validation = this.validate(params);
@@ -30,7 +29,6 @@ const Calculator = {
         }
 
         // Calculate consumption
-        const totalConsumption = mainMeterCurr - mainMeterPrev;
         const unit2Consumption = subMeterCurr - subMeterPrev;
         const unit1Consumption = totalConsumption - unit2Consumption;
 
@@ -74,7 +72,6 @@ const Calculator = {
             rateCheck,
             unitLabel,
             meters: {
-                main: { prev: mainMeterPrev, curr: mainMeterCurr },
                 sub: { prev: subMeterPrev, curr: subMeterCurr }
             }
         };
@@ -84,41 +81,32 @@ const Calculator = {
      * Validate input parameters
      */
     validate(params) {
-        const { totalBill, mainMeterPrev, mainMeterCurr, subMeterPrev, subMeterCurr } = params;
+        const { totalBill, totalConsumption, subMeterPrev, subMeterCurr } = params;
 
         if (!totalBill || totalBill <= 0) {
             return { valid: false, error: 'יש להזין סכום חשבונית חיובי' };
         }
 
-        if (mainMeterPrev === undefined || mainMeterPrev === null || mainMeterPrev === '') {
-            return { valid: false, error: 'יש להזין קריאה קודמת של מונה ראשי' };
+        if (!totalConsumption || totalConsumption <= 0) {
+            return { valid: false, error: 'יש להזין צריכה כוללת מהחשבונית' };
         }
 
-        if (mainMeterCurr === undefined || mainMeterCurr === null || mainMeterCurr === '') {
-            return { valid: false, error: 'יש להזין קריאה נוכחית של מונה ראשי' };
-        }
-
-        if (subMeterPrev === undefined || subMeterPrev === null || subMeterPrev === '') {
+        if (subMeterPrev === undefined || subMeterPrev === null || subMeterPrev === '' || isNaN(subMeterPrev)) {
             return { valid: false, error: 'יש להזין קריאה קודמת של מונה משני' };
         }
 
-        if (subMeterCurr === undefined || subMeterCurr === null || subMeterCurr === '') {
+        if (subMeterCurr === undefined || subMeterCurr === null || subMeterCurr === '' || isNaN(subMeterCurr)) {
             return { valid: false, error: 'יש להזין קריאה נוכחית של מונה משני' };
         }
 
-        const totalConsumption = mainMeterCurr - mainMeterPrev;
         const subConsumption = subMeterCurr - subMeterPrev;
-
-        if (totalConsumption <= 0) {
-            return { valid: false, error: 'קריאה נוכחית של מונה ראשי חייבת להיות גדולה מהקריאה הקודמת' };
-        }
 
         if (subConsumption < 0) {
             return { valid: false, error: 'קריאה נוכחית של מונה משני חייבת להיות גדולה או שווה לקריאה הקודמת' };
         }
 
         if (subConsumption > totalConsumption) {
-            return { valid: false, error: 'צריכת המונה המשני לא יכולה להיות גדולה מצריכת המונה הראשי' };
+            return { valid: false, error: 'צריכת המונה המשני לא יכולה להיות גדולה מהצריכה הכוללת בחשבונית' };
         }
 
         return { valid: true };
