@@ -81,6 +81,22 @@
                     <h2 class="card-title">פרטי החשבונית</h2>
                     <button class="settings-btn" id="openSetup" title="הגדרות קריאות">⚙️</button>
                 </div>
+
+                <!-- Receipt OCR -->
+                <div class="ocr-section">
+                    <label class="upload-btn receipt-upload-btn" for="receiptImage">
+                        <span>🧾</span> העלה תמונת חשבונית
+                    </label>
+                    <input type="file" id="receiptImage" accept="image/*" capture="environment" style="display:none;">
+                    <div id="receiptOcrStatus" class="ocr-status" style="display:none;"></div>
+                    <div id="receiptPreview" class="image-preview" style="display:none;">
+                        <img id="receiptPreviewImg" alt="תמונת חשבונית">
+                        <button class="remove-image-btn" id="removeReceipt">✕</button>
+                    </div>
+                </div>
+
+                <div class="divider-text">או הזן ידנית</div>
+
                 <div class="form-group">
                     <label for="totalBill">סכום כולל לתשלום (₪)</label>
                     <input type="number" id="totalBill" placeholder="הזן סכום מהחשבונית" step="0.01" min="0">

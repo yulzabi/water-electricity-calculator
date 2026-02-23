@@ -43,7 +43,14 @@
         subConsumption: document.getElementById('subConsumption'),
         subConsumptionValue: document.getElementById('subConsumptionValue'),
 
-        // OCR
+        // Receipt OCR
+        receiptImage: document.getElementById('receiptImage'),
+        receiptOcrStatus: document.getElementById('receiptOcrStatus'),
+        receiptPreview: document.getElementById('receiptPreview'),
+        receiptPreviewImg: document.getElementById('receiptPreviewImg'),
+        removeReceipt: document.getElementById('removeReceipt'),
+
+        // Meter OCR
         meterImage: document.getElementById('meterImage'),
         ocrStatus: document.getElementById('ocrStatus'),
         imagePreview: document.getElementById('imagePreview'),
@@ -238,7 +245,72 @@
         });
     }
 
-    // === OCR Image Upload ===
+    // === Receipt OCR ===
+    function initReceiptOCR() {
+        elements.receiptImage.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show preview
+            const previewUrl = OCR.createPreviewUrl(file);
+            elements.receiptPreviewImg.src = previewUrl;
+            elements.receiptPreview.style.display = 'block';
+
+            // Show loading
+            elements.receiptOcrStatus.style.display = 'block';
+            elements.receiptOcrStatus.className = 'ocr-status loading';
+            elements.receiptOcrStatus.innerHTML = '<span class="spinner"></span> מנתח חשבונית...';
+
+            try {
+                const result = await OCR.processReceipt(file, currentBillType, (progress) => {
+                    elements.receiptOcrStatus.innerHTML = `<span class="spinner"></span> מנתח... ${progress}%`;
+                });
+
+                if (result.found) {
+                    let statusParts = [];
+
+                    if (result.totalBill !== null) {
+                        elements.totalBill.value = result.totalBill;
+                        statusParts.push(`סכום: ₪${result.totalBill}`);
+                    }
+
+                    if (result.consumption !== null) {
+                        elements.totalConsumption.value = result.consumption;
+                        const unit = RATES[currentBillType].unit;
+                        statusParts.push(`צריכה: ${result.consumption} ${unit}`);
+                    }
+
+                    elements.receiptOcrStatus.className = 'ocr-status success';
+                    let statusText = `✅ זוהה: ${statusParts.join(' | ')}`;
+
+                    if (result.totalBill === null) {
+                        statusText += '\n⚠️ לא זוהה סכום לתשלום - הזן ידנית';
+                    }
+                    if (result.consumption === null) {
+                        statusText += '\n⚠️ לא זוהתה צריכה - הזן ידנית';
+                    }
+
+                    statusText += '\nניתן לתקן ידנית אם הערכים לא מדויקים';
+                    elements.receiptOcrStatus.textContent = statusText;
+                } else {
+                    elements.receiptOcrStatus.className = 'ocr-status error';
+                    elements.receiptOcrStatus.textContent = '❌ לא זוהו נתונים מהחשבונית. נסה תמונה ברורה יותר או הזן ידנית';
+                }
+            } catch (error) {
+                elements.receiptOcrStatus.className = 'ocr-status error';
+                elements.receiptOcrStatus.textContent = `❌ ${error.message}`;
+            }
+        });
+
+        elements.removeReceipt.addEventListener('click', () => {
+            elements.receiptPreview.style.display = 'none';
+            elements.receiptOcrStatus.style.display = 'none';
+            elements.receiptImage.value = '';
+            elements.receiptPreviewImg.src = '';
+        });
+    }
+
+    // === Meter OCR Image Upload ===
     function initOCR() {
         elements.meterImage.addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -469,6 +541,7 @@
         initTabs();
         initBillType();
         initLiveConsumption();
+        initReceiptOCR();
         initOCR();
         initCalculate();
         initActions();

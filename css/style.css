@@ -250,9 +250,19 @@ body {
     transition: all 0.3s ease;
 }
 
+.receipt-upload-btn {
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+    color: #1a1a2e;
+    font-weight: 600;
+}
+
 .upload-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.receipt-upload-btn:hover {
+    box-shadow: 0 4px 15px rgba(247, 151, 30, 0.4);
 }
 
 .upload-btn:active {
